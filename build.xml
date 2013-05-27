@@ -1,0 +1,46 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant" name="anonchat" default="build">
+  
+  <!-- load ivy tasks -->
+  <taskdef resource="org/apache/ivy/ant/antlib.xml"
+	   uri="antlib:org.apache.ivy.ant"
+	   classpath="ivy/lib/ivy-2.3.0.jar"/>
+
+  <property name="output.dir" value="output"/>
+  <property name="app.root" value="${output.dir}/app"/>
+  <property name="classes.dir" value="${app.root}/WEB-INF/classes"/>
+  <property name="lib.dir" value="${app.root}/WEB-INF/lib"/>
+  <property name="conf.dir" value="conf"/>
+
+  <path id="javac.classpath">
+    <fileset dir="${lib.dir}">
+      <include name="*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="resolve" description="--> retrieve dependencies with ivy">
+    <mkdir dir="${lib.dir}"/>
+    <ivy:retrieve pattern="${lib.dir}/[artifact]-[revision].[ext]"/>
+  </target>
+
+  <target name="compile" depends="resolve" description="--> compile java sources">
+    <mkdir dir="${classes.dir}"/>
+    <javac srcdir="src" destdir="${classes.dir}" includeantruntime="false">
+      <classpath refid="javac.classpath"/>
+    </javac>
+  </target>
+
+  <target name="build" depends="compile" description="--> build app into war file">
+    <copy todir="${app.root}">
+      <fileset dir="www"/>
+    </copy>
+    <copy file="${conf.dir}/log4j.properties"
+	  tofile="${classes.dir}/log4j.properties"/>
+    <war destfile="${output.dir}/anonchat.war"
+	 webxml="${app.root}/WEB-INF/web.xml"
+	 basedir="${app.root}"/>
+  </target>
+  
+  <target name="clean" description="--> delete all generated files">
+    <delete dir="${output.dir}"/>
+  </target>
+</project>
